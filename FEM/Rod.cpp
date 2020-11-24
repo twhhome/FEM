@@ -152,7 +152,7 @@ int main() {
 	
 	readFile("4.txt", nodeDOF, nodes, rods, constraints, loads);
 	printParameters(nodeDOF, nodes, rods, constraints, loads);
-	
+
 	MatrixIn1D K;
 	calStiffnessMatrix(nodeDOF, nodes, rods, K);
 	processConstraints(constraints, K);

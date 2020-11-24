@@ -28,7 +28,9 @@ typedef struct {
 	double force; // Ô¼Êø·´Á¦
 } Constraint;
 
+void calStiffnessMatrix(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix<double> &K);
 void calStiffnessMatrix(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, MatrixIn1D &K);
+void processConstraints(Matrix<Constraint> &constraints, Matrix<double> &K);
 void processConstraints(Matrix<Constraint> &constraints, MatrixIn1D &K);
 void solve(int nodeDOF, Matrix<Node> &nodes, MatrixIn1D &K, Matrix<double> &loads);
 void calRods(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods);

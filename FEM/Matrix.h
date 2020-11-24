@@ -150,7 +150,8 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, Matrix<T> &mat) {
 	for (int i = 0; i < mat.n; i++) {
 		for (int j = 0; j < mat.m; j++) {
-			os << std::setw(10) << std::left << mat.array[i][j] << " ";
+			//os << std::setw(10) << std::left << mat.array[i][j] << " ";
+			os << mat.array[i][j] << " ";
 		}
 		if (i != mat.n - 1)
 			os << std::endl;

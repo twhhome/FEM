@@ -1,5 +1,22 @@
 #include "FEMCore.h"
 
+void calStiffnessMatrix(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix<double> &K) {
+	K = Matrix<double>(nodeDOF * nodes.n);
+	for (int i = 0; i < rods.n; i++) {
+		Matrix<double> temp = rods(i).T.trans() * rods(i).TK;
+		Matrix<double> Ke = temp * rods(i).T;
+
+		for (int j = 0; j < Ke.n; j++) {
+			for (int k = 0; k < Ke.m; k++) {
+				int Kj, Kk;
+				Kj = nodeDOF * (((j < nodeDOF) ? rods(i).nodeNum1 : rods(i).nodeNum2) - 1) + j % nodeDOF;
+				Kk = nodeDOF * (((k < nodeDOF) ? rods(i).nodeNum1 : rods(i).nodeNum2) - 1) + k % nodeDOF;
+				K(Kj, Kk) += Ke(j, k);
+			}
+		}
+	}
+}
+
 void calStiffnessMatrix(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, MatrixIn1D &K) {
 	// calculate pDiag
 	K.pDiag = Matrix<int>(1, nodeDOF * nodes.n);
@@ -35,6 +52,12 @@ void calStiffnessMatrix(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Mat
 				K.data(index) += Ke(j, k);
 			}
 		}
+	}
+}
+
+void processConstraints(Matrix<Constraint> &constraints, Matrix<double> &K) {
+	for (int i = 0; i < constraints.n; i++) {
+		K(constraints(i).dDirection - 1, constraints(i).dDirection - 1) = 1e25;//std::numeric_limits<double>::max();
 	}
 }
 
