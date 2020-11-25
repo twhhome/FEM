@@ -76,7 +76,7 @@ void solve(int nodeDOF, Matrix<Node> &nodes, MatrixIn1D &K, Matrix<double> &load
 	}
 }
 
-void calRods(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods) {
+void calRods(Matrix<Section> &sections, int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods) {
 	for (int i = 0; i < rods.n; i++) {
 		Matrix<double> de(2 * nodeDOF, 1);
 		for (int j = 0; j < nodeDOF; j++) {
@@ -88,7 +88,7 @@ void calRods(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods) {
 		rods(i).fee = rods(i).TK * rods(i).dee;
 		rods(i).fe = rods(i).T.trans() * rods(i).fee;
 		rods(i).IF = rods(i).fee(1);
-		rods(i).stress = rods(i).IF / rods(i).A;
+		rods(i).stress = rods(i).IF / sections(rods(i).sectionNum - 1).A;
 	}
 }
 

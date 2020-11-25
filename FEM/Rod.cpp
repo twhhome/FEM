@@ -7,8 +7,27 @@ double calLength(Node &node1, Node &node2) {
 	return sqrt((delta.trans() * delta)(0));
 }
 
-void readFile(const char* filename, int &nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix<Constraint> &constraints, Matrix<double> &loads) {
+void readFile(const char* filename, Matrix<Material> &materials, Matrix<Section> &sections, int &nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix<Constraint> &constraints, Matrix<double> &loads) {
 	FILE* fp = fopen(filename, "r");
+
+	int materialNum;
+	fscanf(fp, "%d", &materialNum);
+	materials = Matrix<Material>(materialNum, 1);
+	for (int i = 0; i < materialNum; i++) {
+		double E, poisson;
+		fscanf(fp, "%lf%lf", &E, &poisson);
+		materials(i).E = E;
+		materials(i).poisson = poisson;
+	}
+
+	int sectionNum;
+	fscanf(fp, "%d", &sectionNum);
+	sections = Matrix<Section>(sectionNum, 1);
+	for (int i = 0; i < sectionNum; i++) {
+		double A;
+		fscanf(fp, "%lf", &A);
+		sections(i).A = A;
+	}
 
 	int nodeNum;
 	fscanf(fp, "%d", &nodeNum);
@@ -25,11 +44,14 @@ void readFile(const char* filename, int &nodeDOF, Matrix<Node> &nodes, Matrix<Ro
 	int rodNum;
 	fscanf(fp, "%d", &rodNum);
 	rods = Matrix<Rod>(rodNum, 1);
-	int nodeNum1, nodeNum2;
+	int nodeNum1, nodeNum2, material, section;
 	double E, A, L;
 	Matrix<double> TK(2, 2), T(2, 2 * nodeDOF);
 	for (int i = 0; i < rodNum; i++) {
-		fscanf(fp, "%d%d%lf%lf", &nodeNum1, &nodeNum2, &E, &A);
+		fscanf(fp, "%d%d%d%d", &nodeNum1, &nodeNum2, &material, &section);
+
+		E = materials(material - 1).E;
+		A = sections(section - 1).A;
 
 		Node node1 = nodes(nodeNum1 - 1);
 		Node node2 = nodes(nodeNum2 - 1);
@@ -46,8 +68,8 @@ void readFile(const char* filename, int &nodeDOF, Matrix<Node> &nodes, Matrix<Ro
 
 		rods(i).nodeNum1 = nodeNum1;
 		rods(i).nodeNum2 = nodeNum2;
-		rods(i).E = E;
-		rods(i).A = A;
+		rods(i).materialNum = material;
+		rods(i).sectionNum = section;
 		rods(i).L = L;
 		rods(i).TK = TK;
 		rods(i).T = T;
@@ -68,10 +90,22 @@ void readFile(const char* filename, int &nodeDOF, Matrix<Node> &nodes, Matrix<Ro
 	fclose(fp);
 }
 
-void printParameters(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix<Constraint> &constraints, Matrix<double> &loads) {
+void printParameters(Matrix<Material> &materials, Matrix<Section> &sections, int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix<Constraint> &constraints, Matrix<double> &loads) {
 	printf("---------------------------------------输入参数---------------------------------------\n");
 
-	printf("总节点数：%d\n", nodes.n);
+	printf("材料总数：%d\n", materials.n);
+	for (int i = 0; i < materials.n; i++) {
+		printf("第%d种材料：E=%lf, 泊松比=%lf\n", i + 1, materials(i).E, materials(i).poisson);
+	}
+	printf("\n");
+
+	printf("截面总数：%d\n", sections.n);
+	for (int i = 0; i < sections.n; i++) {
+		printf("第%d种截面：A=%lf\n", i + 1, sections(i).A);
+	}
+	printf("\n");
+
+	printf("节点总数：%d\n", nodes.n);
 	printf("节点自由度数：%d\n", nodeDOF);
 	printf("节点坐标：\n");
 	for (int i = 0; i < nodes.n; i++) {
@@ -88,7 +122,7 @@ void printParameters(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix
 	printf("单元总数：%d\n", rods.n);
 	printf("单元信息：\n");
 	for (int i = 0; i < rods.n; i++) {
-		printf("第%d个单元：%d号节点与%d号节点，E=%lf，A=%lf，L=%lf\n", i + 1, rods(i).nodeNum1, rods(i).nodeNum2, rods(i).E, rods(i).A, rods(i).L);
+		printf("第%d个单元：%d号节点与%d号节点，第%d种材料，第%d种截面，L=%lf\n", i + 1, rods(i).nodeNum1, rods(i).nodeNum2, rods(i).materialNum, rods(i).sectionNum, rods(i).L);
 	}
 	printf("\n");
 	
@@ -113,7 +147,7 @@ void printSolution(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix<C
 		for (int j = 0; j < nodeDOF; j++) {
 			if (j != 0)
 				printf(",");
-			printf("%lf", nodes(i).displacement(j));
+			printf("%e", nodes(i).displacement(j));
 		}
 		printf(")\n");
 	}
@@ -123,10 +157,10 @@ void printSolution(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix<C
 	for (int i = 0; i < rods.n; i++) {
 		printf("第%d个单元：\n", i + 1);
 		if(nodeDOF == 2)
-			printf("整体坐标系下的节点位移：(%lf,%lf),(%lf,%lf)\n", rods(i).de(0), rods(i).de(1), rods(i).de(2), rods(i).de(3));
+			printf("整体坐标系下的节点位移：(%e,%e),(%e,%e)\n", rods(i).de(0), rods(i).de(1), rods(i).de(2), rods(i).de(3));
 		else if(nodeDOF == 3)
-			printf("整体坐标系下的节点位移：(%lf,%lf,%lf),(%lf,%lf,%lf)\n", rods(i).de(0), rods(i).de(1), rods(i).de(2), rods(i).de(3), rods(i).de(4), rods(i).de(5));
-		printf("局部坐标系下的节点位移：%lf,%lf\n", rods(i).dee(0), rods(i).dee(1));
+			printf("整体坐标系下的节点位移：(%e,%e,%e),(%e,%e,%e)\n", rods(i).de(0), rods(i).de(1), rods(i).de(2), rods(i).de(3), rods(i).de(4), rods(i).de(5));
+		printf("局部坐标系下的节点位移：%e,%e\n", rods(i).dee(0), rods(i).dee(1));
 		if (nodeDOF == 2)
 			printf("整体坐标系下的节点力：(%lf,%lf),(%lf,%lf)\n", rods(i).fe(0), rods(i).fe(1), rods(i).fe(2), rods(i).fe(3));
 		else if (nodeDOF == 3)
@@ -145,21 +179,23 @@ void printSolution(int nodeDOF, Matrix<Node> &nodes, Matrix<Rod> &rods, Matrix<C
 
 int main() {
 	int nodeDOF;
+	Matrix<Material> materials;
+	Matrix<Section> sections;
 	Matrix<Node> nodes;
 	Matrix<Rod> rods;
 	Matrix<Constraint> constraints;
 	Matrix<double> loads;
 	
-	readFile("4.txt", nodeDOF, nodes, rods, constraints, loads);
-	printParameters(nodeDOF, nodes, rods, constraints, loads);
-
+	readFile("4.txt", materials, sections, nodeDOF, nodes, rods, constraints, loads);
+	printParameters(materials, sections, nodeDOF, nodes, rods, constraints, loads);
+	
 	MatrixIn1D K;
 	calStiffnessMatrix(nodeDOF, nodes, rods, K);
 	processConstraints(constraints, K);
 
 	solve(nodeDOF, nodes, K, loads);
 	
-	calRods(nodeDOF, nodes, rods);
+	calRods(sections, nodeDOF, nodes, rods);
 	calConstraintForce(nodeDOF, nodes, rods, constraints);
 	
 	printSolution(nodeDOF, nodes, rods, constraints);
