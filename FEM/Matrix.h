@@ -1,6 +1,7 @@
 #pragma once
 
 #include "includes.h"
+#include "Array.h"
 
 template <typename T> class Matrix
 {
@@ -13,6 +14,7 @@ public:
 	Matrix(int n) : Matrix(n, n) {}
 	Matrix(int n, int m, T** src);
 	Matrix(Matrix<T> const &src);
+	Matrix(Array<T> const &src);
 
 	~Matrix();
 
@@ -68,6 +70,17 @@ Matrix<T>::Matrix(Matrix<T> const &src) {
 	for (int i = 0; i < this->n; i++) {
 		this->array[i] = new T[m]();
 		memcpy(this->array[i], src.array[i], this->m * sizeof(T));
+	}
+}
+
+template <typename T>
+Matrix<T>::Matrix(Array<T> const &src) {
+	n = 1;
+	m = src.size();
+	array = new T*[1];
+	array[0] = new T[m];
+	for (int i = 0; i < m; i++) {
+		array[0][i] = src[i];
 	}
 }
 

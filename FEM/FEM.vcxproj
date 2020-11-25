@@ -24,6 +24,7 @@
     <ClCompile Include="Rod.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Array.h" />
     <ClInclude Include="FEMCore.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="Matrix.h" />

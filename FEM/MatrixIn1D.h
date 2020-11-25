@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Matrix.h"
+#include "Array.h"
 
 class MatrixIn1D {
 public:
