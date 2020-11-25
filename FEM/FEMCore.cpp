@@ -1,32 +1,32 @@
 #include "FEMCore.h"
 
-void calStiffnessMatrix(int nodeDOF, Array<Node> &nodes, Array<Rod> &rods, Matrix<double> &K) {
+void calStiffnessMatrix(int nodeDOF, Array<Node> &nodes, Array<Element> &elements, Matrix<double> &K) {
 	K = Matrix<double>(nodeDOF * nodes.size());
-	for (int i = 0; i < rods.size(); i++) {
-		Matrix<double> temp = rods[i].T.trans() * rods[i].TK;
-		Matrix<double> Ke = temp * rods[i].T;
+	for (int i = 0; i < elements.size(); i++) {
+		Matrix<double> temp = elements[i].T.trans() * elements[i].TK;
+		Matrix<double> Ke = temp * elements[i].T;
 
 		for (int j = 0; j < Ke.n; j++) {
 			for (int k = 0; k < Ke.m; k++) {
 				int Kj, Kk;
-				Kj = nodeDOF * (((j < nodeDOF) ? rods[i].nodeNum1 : rods[i].nodeNum2) - 1) + j % nodeDOF;
-				Kk = nodeDOF * (((k < nodeDOF) ? rods[i].nodeNum1 : rods[i].nodeNum2) - 1) + k % nodeDOF;
+				Kj = nodeDOF * (((j < nodeDOF) ? elements[i].nodeNum1 : elements[i].nodeNum2) - 1) + j % nodeDOF;
+				Kk = nodeDOF * (((k < nodeDOF) ? elements[i].nodeNum1 : elements[i].nodeNum2) - 1) + k % nodeDOF;
 				K(Kj, Kk) += Ke(j, k);
 			}
 		}
 	}
 }
 
-void calStiffnessMatrix(int nodeDOF, Array<Node> &nodes, Array<Rod> &rods, MatrixIn1D &K) {
+void calStiffnessMatrix(int nodeDOF, Array<Node> &nodes, Array<Element> &elements, MatrixIn1D &K) {
 	// calculate pDiag
 	K.pDiag = Matrix<int>(1, nodeDOF * nodes.size());
 	K.pDiag(0) = 0;
 	for (int i = 0; i < nodes.size(); i++) {
 		int minIndex = std::numeric_limits<int>::max();
-		for (int j = 0; j < rods.size(); j++) {
-			if (i == rods[j].nodeNum1 - 1 || i == rods[j].nodeNum2 - 1) {
-				if (MIN(rods[j].nodeNum1, rods[j].nodeNum2) < minIndex)
-					minIndex = MIN(rods[j].nodeNum1, rods[j].nodeNum2);
+		for (int j = 0; j < elements.size(); j++) {
+			if (i == elements[j].nodeNum1 - 1 || i == elements[j].nodeNum2 - 1) {
+				if (MIN(elements[j].nodeNum1, elements[j].nodeNum2) < minIndex)
+					minIndex = MIN(elements[j].nodeNum1, elements[j].nodeNum2);
 			}
 		}
 		for (int j = 0; j < nodeDOF; j++) {
@@ -38,14 +38,14 @@ void calStiffnessMatrix(int nodeDOF, Array<Node> &nodes, Array<Rod> &rods, Matri
 	}
 	K.data = Matrix<double>(1, K.pDiag(K.pDiag.m - 1) + 1);
 
-	for (int i = 0; i < rods.size(); i++) {
-		Matrix<double> temp = rods[i].T.trans() * rods[i].TK;
-		Matrix<double> Ke = temp * rods[i].T;
+	for (int i = 0; i < elements.size(); i++) {
+		Matrix<double> temp = elements[i].T.trans() * elements[i].TK;
+		Matrix<double> Ke = temp * elements[i].T;
 		for (int j = 0; j < Ke.n; j++) {
 			for (int k = 0; k < Ke.m; k++) {
 				int Kj, Kk;
-				Kj = nodeDOF * (((j < nodeDOF) ? rods[i].nodeNum1 : rods[i].nodeNum2) - 1) + j % nodeDOF;
-				Kk = nodeDOF * (((k < nodeDOF) ? rods[i].nodeNum1 : rods[i].nodeNum2) - 1) + k % nodeDOF;
+				Kj = nodeDOF * (((j < nodeDOF) ? elements[i].nodeNum1 : elements[i].nodeNum2) - 1) + j % nodeDOF;
+				Kk = nodeDOF * (((k < nodeDOF) ? elements[i].nodeNum1 : elements[i].nodeNum2) - 1) + k % nodeDOF;
 				if (Kj < Kk)
 					continue;
 				int index = K.pDiag(Kj) - (Kj - Kk);
@@ -78,28 +78,28 @@ void solve(int nodeDOF, Array<Node> &nodes, MatrixIn1D &K, Array<double> &loads)
 	}
 }
 
-void calRods(Array<Section> &sections, int nodeDOF, Array<Node> &nodes, Array<Rod> &rods) {
-	for (int i = 0; i < rods.size(); i++) {
+void calRods(Array<Section> &sections, int nodeDOF, Array<Node> &nodes, Array<Element> &elements) {
+	for (int i = 0; i < elements.size(); i++) {
 		Matrix<double> de(2 * nodeDOF, 1);
 		for (int j = 0; j < nodeDOF; j++) {
-			de(j) = nodes[rods[i].nodeNum1 - 1].displacement(j);
-			de(j + nodeDOF) = nodes[rods[i].nodeNum2 - 1].displacement(j);
+			de(j) = nodes[elements[i].nodeNum1 - 1].displacement(j);
+			de(j + nodeDOF) = nodes[elements[i].nodeNum2 - 1].displacement(j);
 		}
-		rods[i].de = de;
-		rods[i].dee = rods[i].T * de;
-		rods[i].fee = rods[i].TK * rods[i].dee;
-		rods[i].fe = rods[i].T.trans() * rods[i].fee;
-		rods[i].IF = rods[i].fee(1);
-		rods[i].stress = rods[i].IF / sections[rods[i].sectionNum - 1].A;
+		elements[i].de = de;
+		elements[i].dee = elements[i].T * de;
+		elements[i].fee = elements[i].TK * elements[i].dee;
+		elements[i].fe = elements[i].T.trans() * elements[i].fee;
+		elements[i].IF = elements[i].fee(1);
+		elements[i].stress = elements[i].IF / sections[elements[i].sectionNum - 1].A;
 	}
 }
 
-void calConstraintForce(int nodeDOF, Array<Node> &nodes, Array<Rod> &rods, Array<Constraint> &constraints) {
+void calConstraintForce(int nodeDOF, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints) {
 	Matrix<double> F(nodes.size() * nodeDOF, 1);
-	for (int i = 0; i < rods.size(); i++) {
+	for (int i = 0; i < elements.size(); i++) {
 		for (int j = 0; j < nodeDOF; j++) {
-			F((rods[i].nodeNum1 - 1) * nodeDOF + j) += rods[i].fe(j);
-			F((rods[i].nodeNum2 - 1) * nodeDOF + j) += rods[i].fe(j + nodeDOF);
+			F((elements[i].nodeNum1 - 1) * nodeDOF + j) += elements[i].fe(j);
+			F((elements[i].nodeNum2 - 1) * nodeDOF + j) += elements[i].fe(j + nodeDOF);
 		}
 	}
 	for (int i = 0; i < constraints.size(); i++) {
