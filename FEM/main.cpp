@@ -1,31 +1,19 @@
-#include "FEMCore.h"
-#include "readFile.h"
-#include "printToScreen.h"
+#include "FEM.h"
 
-int main() {
-	int elementType;
-	int nodeDOF;
-	Array<Material> materials;
-	Array<Section> sections;
-	Array<Offset> offsets;
-	Array<Node> nodes;
-	Array<Element> elements;
-	Array<Constraint> constraints;
-	Array<Load> loads;
-	
-	readFile("5.txt", nodeDOF, elementType, materials, sections, offsets, nodes, elements, constraints, loads);
-	
-	MatrixIn1D K;
-	calStiffnessMatrix(nodeDOF, nodes, elements, K);
-	processConstraints(constraints, K);
+int main(int argc, char **argv) {
+	char filename[80];
+	if (argc == 1) {
+		printf("请输入文件名：");
+		scanf("%s", filename);
+	}
+	else if (argc == 2) {
+		strcpy(filename, argv[1]);
+	}
+	else
+		exit(0);
 
-	solve(nodeDOF, nodes, K, loads);
-	
-	calRods(elementType, sections, nodeDOF, nodes, elements);
-	calConstraintForce(nodeDOF, nodes, elements, constraints);
-	
-	printSolution(elementType, nodeDOF, nodes, elements, constraints);
-	
-	printFinishMessage();
+	FEM fem(filename);
+	fem.solve();
+
 	return 0;
 }

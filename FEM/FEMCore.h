@@ -53,7 +53,6 @@ typedef struct {
 	double force; // ‘ÿ∫…¡¶
  } Load;
 
-
 void calStiffnessMatrix(int nodeDOF, Array<Node> &nodes, Array<Element> &elements, Matrix<double> &K);
 void calStiffnessMatrix(int nodeDOF, Array<Node> &nodes, Array<Element> &elements, MatrixIn1D &K);
 
@@ -63,7 +62,7 @@ void processConstraints(Array<Constraint> &constraints, MatrixIn1D &K);
 template <typename T> Matrix<T> cholesky(Matrix<T> &A, Matrix<T> &B);
 Matrix<double> cholesky(MatrixIn1D &A, Matrix<double> &B);
 
-void solve(int nodeDOF, Array<Node> &nodes, MatrixIn1D &K, Array<Load> &loads);
+void solveEqns(int nodeDOF, Array<Node> &nodes, MatrixIn1D &K, Array<Load> &loads);
 
 void calRods(int elementType, Array<Section> &sections, int nodeDOF, Array<Node> &nodes, Array<Element> &elements);
 

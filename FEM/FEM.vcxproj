@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FEM.cpp" />
     <ClCompile Include="FEMCore.cpp" />
     <ClCompile Include="MatrixIn1D.cpp" />
     <ClCompile Include="main.cpp" />
@@ -27,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array.h" />
+    <ClInclude Include="FEM.h" />
     <ClInclude Include="FEMCore.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="Matrix.h" />

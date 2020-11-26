@@ -171,7 +171,7 @@ Matrix<double> cholesky(MatrixIn1D &A, Matrix<double> &B) {
 }
 
 
-void solve(int nodeDOF, Array<Node> &nodes, MatrixIn1D &K, Array<Load> &loads) {
+void solveEqns(int nodeDOF, Array<Node> &nodes, MatrixIn1D &K, Array<Load> &loads) {
 	Matrix<double> F(nodeDOF * nodes.size(), 1);
 	for (int i = 0; i < loads.size(); i++) {
 		F(loads[i].dDirection - 1) = loads[i].force;
