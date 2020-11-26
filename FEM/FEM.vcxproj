@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="FEMCore.cpp" />
     <ClCompile Include="MatrixIn1D.cpp" />
-    <ClCompile Include="Rod.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array.h" />
