@@ -53,15 +53,15 @@ typedef struct {
 	double force; // ‘ÿ∫…¡¶
  } Load;
 
-void readRodsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array<Section> &sections, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads);
-void readBeamsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array<Section> &sections, Array<Offset> &offsets, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads);
-void printParameters(int elementType, int nodeDOF, Array<Material> &materials, Array<Section> &sections, Array<Offset> &offsets, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads);
 
 void calStiffnessMatrix(int nodeDOF, Array<Node> &nodes, Array<Element> &elements, Matrix<double> &K);
 void calStiffnessMatrix(int nodeDOF, Array<Node> &nodes, Array<Element> &elements, MatrixIn1D &K);
 
 void processConstraints(Array<Constraint> &constraints, Matrix<double> &K);
 void processConstraints(Array<Constraint> &constraints, MatrixIn1D &K);
+
+template <typename T> Matrix<T> cholesky(Matrix<T> &A, Matrix<T> &B);
+Matrix<double> cholesky(MatrixIn1D &A, Matrix<double> &B);
 
 void solve(int nodeDOF, Array<Node> &nodes, MatrixIn1D &K, Array<Load> &loads);
 

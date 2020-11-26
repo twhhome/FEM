@@ -22,6 +22,8 @@
     <ClCompile Include="FEMCore.cpp" />
     <ClCompile Include="MatrixIn1D.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="printToScreen.cpp" />
+    <ClCompile Include="readFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array.h" />
@@ -29,6 +31,8 @@
     <ClInclude Include="includes.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="MatrixIn1D.h" />
+    <ClInclude Include="printToScreen.h" />
+    <ClInclude Include="readFile.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

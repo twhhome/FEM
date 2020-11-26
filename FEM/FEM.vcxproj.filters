@@ -24,6 +24,12 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="readFile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="printToScreen.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Matrix.h">
@@ -39,6 +45,12 @@
       <Filter>源文件</Filter>
     </ClInclude>
     <ClInclude Include="Array.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="readFile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="printToScreen.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Matrix.h"
-#include "Array.h"
 
 class MatrixIn1D {
 public:
@@ -19,5 +18,3 @@ public:
 
 	void set(int i, int j, double n);
 };
-
-Matrix<double> cholesky(MatrixIn1D &A, Matrix<double> &B);
