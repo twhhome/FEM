@@ -187,7 +187,7 @@ void solveEqns(int nodeDOF, Array<Node> &nodes, MatrixIn1D &K, Array<Load> &load
 	}
 }
 
-void calRods(int elementType, Array<Section> &sections, int nodeDOF, Array<Node> &nodes, Array<Element> &elements) {
+void calElements(int elementType, Array<Section> &sections, int nodeDOF, Array<Node> &nodes, Array<Element> &elements) {
 	for (int i = 0; i < elements.size(); i++) {
 		Matrix<double> de(2 * nodeDOF, 1);
 		for (int j = 0; j < nodeDOF; j++) {

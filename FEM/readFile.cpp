@@ -6,19 +6,23 @@ double calLength(Node &node1, Node &node2) {
 	return sqrt((delta.trans() * delta)(0));
 }
 
-void readFile(const char* filename, int &nodeDOF, int &elementType, Array<Material> &materials, Array<Section> &sections, Array<Offset> &offsets, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads) {
+void readFile(const char* filename, int &nodeDOF, int &elementType, Array<Material> &materials, Array<Section> &sections, Array<Offset> &offsets, Array<Node> &nodes, Array<Node> &secondNodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads) {
 	FILE* fp = fopen(filename, "r");
+	if (fp == NULL) {
+		printf("输入文件不存在");
+		exit(1);
+	}
 
 	fscanf(fp, "%d", &elementType);
 
 	if (elementType == 1) // Rod
 		readRodsFromFile(fp, nodeDOF, materials, sections, nodes, elements, constraints, loads);
 	else if (elementType == 2) // Beam
-		readBeamsFromFile(fp, nodeDOF, materials, sections, offsets, nodes, elements, constraints, loads);
+		readBeamsFromFile(fp, nodeDOF, materials, sections, offsets, nodes, secondNodes, elements, constraints, loads);
 
 	fclose(fp);
 
-	printParameters(elementType, nodeDOF, materials, sections, offsets, nodes, elements, constraints, loads);
+	printParameters(elementType, nodeDOF, materials, sections, offsets, nodes, secondNodes, elements, constraints, loads);
 }
 
 void readRodsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array<Section> &sections, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads) {
@@ -103,7 +107,7 @@ void readRodsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array<
 }
 
 
-void readBeamsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array<Section> &sections, Array<Offset> &offsets, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads) {
+void readBeamsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array<Section> &sections, Array<Offset> &offsets, Array<Node> &nodes, Array<Node> &secondNodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads) {
 	fscanf(fp, "%d", &nodeDOF);
 
 	int materialNum;
@@ -129,7 +133,7 @@ void readBeamsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array
 			sections[i].K = K;
 		}
 		else if (nodeDOF == 6) { // 三维
-			fscanf(fp, "%lf%lf%lf%lf%lf%lf%lf", &A, &Ix, &Iy, &Iz, &Ay, &Az, &K);
+			fscanf(fp, "%lf%lf%lf%lf%lf%lf%lf", &A, &Iz, &Ay, &K, &Ix, &Iy, &Az);
 			sections[i].A = A;
 			sections[i].Ix = Ix;
 			sections[i].Iy = Iy;
@@ -171,6 +175,18 @@ void readBeamsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array
 		nodes[i].displacement = Matrix<double>(nodeDOF, 1);
 		for (int j = 0; j < ((nodeDOF == 3) ? 2 : 3); j++) {
 			fscanf(fp, "%lf", &(nodes[i].pos(j)));
+		}
+	}
+
+	if (nodeDOF == 6) {
+		int secondNodeNum;
+		fscanf(fp, "%d", &secondNodeNum);
+		secondNodes = Array<Node>(secondNodeNum);
+		for (int i = 0; i < secondNodeNum; i++) {
+			secondNodes[i].pos = Matrix<double>(3, 1);
+			for (int j = 0; j < 3; j++) {
+				fscanf(fp, "%lf", &(secondNodes[i].pos(j)));
+			}
 		}
 	}
 
@@ -262,7 +278,8 @@ void readBeamsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array
 
 			Node node1 = nodes[nodeNum1 - 1];
 			Node node2 = nodes[nodeNum2 - 1];
-			Node node3 = nodes[nodeNum3 - 1];
+			//Node node3 = nodes[nodeNum3 - 1];
+			Node node3 = secondNodes[nodeNum3 - 1];
 			L = calLength(node1, node2) + a1 - a2;
 
 			by = 12 * K * E * Iz / G / Ay / L / L;
@@ -310,7 +327,7 @@ void readBeamsFromFile(FILE *fp, int &nodeDOF, Array<Material> &materials, Array
 				T(2 + 3 * j, 1 + 3 * j) = delta1(2) * delta2(0) - delta1(0) * delta2(2);
 				T(2 + 3 * j, 2 + 3 * j) = delta1(0) * delta2(1) - delta1(1) * delta2(0);
 			}
-
+			//std::cout << "\n" << T << "\n";
 			Kee = TT.trans() * TK * TT;
 		}
 

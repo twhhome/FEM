@@ -1,6 +1,6 @@
 #include "printToScreen.h"
 
-void printParameters(int elementType, int nodeDOF, Array<Material> &materials, Array<Section> &sections, Array<Offset> &offsets, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads) {
+void printParameters(int elementType, int nodeDOF, Array<Material> &materials, Array<Section> &sections, Array<Offset> &offsets, Array<Node> &nodes, Array<Node> &secondNodes, Array<Element> &elements, Array<Constraint> &constraints, Array<Load> &loads) {
 	printf("---------------------------------------输入参数---------------------------------------\n");
 
 	printf("单元种类：");
@@ -71,12 +71,29 @@ void printParameters(int elementType, int nodeDOF, Array<Material> &materials, A
 	}
 	printf("\n");
 
+	if (elementType == 2 && nodeDOF == 6) {
+		printf("辅助节点总数：%d\n", secondNodes.size());
+		printf("辅助节点坐标：\n");
+		for (int i = 0; i < secondNodes.size(); i++) {
+			printf("第%d个辅助节点：(", i + 1);
+			for (int j = 0; j < 3; j++) {
+				if (j != 0)
+					printf(",");
+				printf("%lf", secondNodes[i].pos(j));
+			}
+			printf(")\n");
+		}
+		printf("\n");
+	}
+
 	printf("单元总数：%d\n", elements.size());
 	printf("单元信息：\n");
 	for (int i = 0; i < elements.size(); i++) {
 		printf("第%d个单元：%d号节点与%d号节点，第%d种材料，第%d种截面，L=%lf", i + 1, elements[i].nodeNum1, elements[i].nodeNum2, elements[i].materialNum, elements[i].sectionNum, elements[i].L);
 		if (elementType == 2)
 			printf("，第%d种偏心", elements[i].offsetNum);
+		if(elementType == 2 && nodeDOF == 6)
+			printf("，%d号辅助节点", elements[i].nodeNum3);
 		printf("\n");
 	}
 	printf("\n");
@@ -94,75 +111,82 @@ void printParameters(int elementType, int nodeDOF, Array<Material> &materials, A
 	printf("\n");
 }
 
-void printSolution(int elementType, int nodeDOF, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints) {
-	printf("\n");
-	printf("---------------------------------------求解结果---------------------------------------\n");
-	printf("节点位移：\n");
+void outputSolution(const char* filename, int elementType, int nodeDOF, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints) {
+	FILE *fp = stdout;
+	if (strlen(filename) != 0) {
+		fp = fopen(filename, "w");
+	}
+	fprintf(fp, "\n");
+	fprintf(fp, "---------------------------------------求解结果---------------------------------------\n");
+	fprintf(fp, "节点位移：\n");
 	for (int i = 0; i < nodes.size(); i++) {
-		printf("第%d个节点的位移：(", i + 1);
+		fprintf(fp, "第%d个节点的位移：(", i + 1);
 		for (int j = 0; j < nodeDOF; j++) {
 			if (j != 0)
-				printf(",");
-			printf("%e", nodes[i].displacement(j));
+				fprintf(fp, ",");
+			fprintf(fp, "%e", nodes[i].displacement(j));
 		}
-		printf(")\n");
+		fprintf(fp, ")\n");
 	}
-	printf("\n");
+	fprintf(fp, "\n");
 
-	printf("单元信息：\n");
+	fprintf(fp, "单元信息：\n");
 	for (int i = 0; i < elements.size(); i++) {
-		printf("第%d个单元：\n", i + 1);
-		printf("整体坐标系下的节点位移：(");
+		fprintf(fp, "第%d个单元：\n", i + 1);
+		fprintf(fp, "整体坐标系下的节点位移：(");
 		for (int j = 0; j < elements[i].de.n; j++) {
 			if (j % nodeDOF == 0 && j != 0)
-				printf("),(");
+				fprintf(fp, "),(");
 			else if (j != 0)
-				printf(",");
-			printf("%e", elements[i].de(j));
+				fprintf(fp, ",");
+			fprintf(fp, "%e", elements[i].de(j));
 		}
-		printf(")\n");
+		fprintf(fp, ")\n");
 
-		printf("局部坐标系下的节点位移：(");
+		fprintf(fp, "局部坐标系下的节点位移：(");
 		for (int j = 0; j < elements[i].dee.n; j++) {
 			if (j == elements[i].dee.n / 2)
-				printf("),(");
+				fprintf(fp, "),(");
 			else if (j != 0)
-				printf(",");
-			printf("%e", elements[i].dee(j));
+				fprintf(fp, ",");
+			fprintf(fp, "%e", elements[i].dee(j));
 		}
-		printf(")\n");
+		fprintf(fp, ")\n");
 
-		printf("整体坐标系下的节点力：(");
+		fprintf(fp, "整体坐标系下的节点力：(");
 		for (int j = 0; j < elements[i].fe.n; j++) {
 			if (j % nodeDOF == 0 && j != 0)
-				printf("),(");
+				fprintf(fp, "),(");
 			else if (j != 0)
-				printf(",");
-			printf("%e", elements[i].fe(j));
+				fprintf(fp, ",");
+			fprintf(fp, "%e", elements[i].fe(j));
 		}
-		printf(")\n");
+		fprintf(fp, ")\n");
 
-		printf("局部坐标系下的节点力：(");
+		fprintf(fp, "局部坐标系下的节点力：(");
 		for (int j = 0; j < elements[i].fee.n; j++) {
 			if (j == elements[i].fee.n / 2)
-				printf("),(");
+				fprintf(fp, "),(");
 			else if (j != 0)
-				printf(",");
-			printf("%e", elements[i].fee(j));
+				fprintf(fp, ",");
+			fprintf(fp, "%e", elements[i].fee(j));
 		}
-		printf(")\n");
+		fprintf(fp, ")\n");
 
 		if (elementType == 1) {
-			printf("单元内力：%lf\n", elements[i].IF);
-			printf("单元应力：%lf\n", elements[i].stress);
+			fprintf(fp, "单元内力：%lf\n", elements[i].IF);
+			fprintf(fp, "单元应力：%lf\n", elements[i].stress);
 		}
 	}
-	printf("\n");
+	fprintf(fp, "\n");
 
-	printf("约束反力：\n");
+	fprintf(fp, "约束反力：\n");
 	for (int i = 0; i < constraints.size(); i++) {
-		printf("位移方向%d的约束反力：%lf\n", constraints[i].dDirection, constraints[i].force);
+		fprintf(fp, "位移方向%d的约束反力：%lf\n", constraints[i].dDirection, constraints[i].force);
 	}
+
+	if (strlen(filename) != 0)
+		fclose(fp);
 }
 
 void printFinishMessage() {

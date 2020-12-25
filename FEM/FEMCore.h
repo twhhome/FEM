@@ -64,6 +64,6 @@ Matrix<double> cholesky(MatrixIn1D &A, Matrix<double> &B);
 
 void solveEqns(int nodeDOF, Array<Node> &nodes, MatrixIn1D &K, Array<Load> &loads);
 
-void calRods(int elementType, Array<Section> &sections, int nodeDOF, Array<Node> &nodes, Array<Element> &elements);
+void calElements(int elementType, Array<Section> &sections, int nodeDOF, Array<Node> &nodes, Array<Element> &elements);
 
 void calConstraintForce(int nodeDOF, Array<Node> &nodes, Array<Element> &elements, Array<Constraint> &constraints);
